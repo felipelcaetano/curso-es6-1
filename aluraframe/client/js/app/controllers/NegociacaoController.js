@@ -6,12 +6,13 @@ class NegociacaoController {
         this._inputData = $('#data');
         this._inputQuantidade = $('#quantidade');
         this._inputValor = $('#valor');
+        this._ordemAtual = '';
 
         //Proxy com DataBind
         this._listaNegociacoes = new Bind(
             new ListaNegociacoes(), 
             new NegociacoesView($('#negociacoesView')), 
-            'adiciona', 'esvazia'
+            'adiciona', 'esvazia', 'ordena', 'inverteOrdem'
         );
 
         //Proxy com DataBind
@@ -26,9 +27,14 @@ class NegociacaoController {
     adiciona(event) {
         
         event.preventDefault();
-        this._listaNegociacoes.adiciona(this._criaNegociacao());
-        this._mensagem.texto = 'Negociação adicionada com sucesso';
-        this._limpaFormulario();   
+
+        try {
+            this._listaNegociacoes.adiciona(this._criaNegociacao());
+            this._mensagem.texto = 'Negociação adicionada com sucesso';
+            this._limpaFormulario();   
+        } catch(erro) {
+            this._mensagem.texto = erro;
+        }
     }
 
     apaga() {
@@ -43,14 +49,22 @@ class NegociacaoController {
             .then(negociacoes => {
 
                 negociacoes.forEach(negociacao => {
-                    
+
                     this._listaNegociacoes.adiciona(negociacao)
                 });
 
                 this._mensagem.texto = 'Negociações importadas com sucesso!';    
             })
             .catch(err => this._mensagem.texto = err);
+    }
 
+    ordena(coluna) {
+        if(this._ordemAtual == coluna) {
+            this._listaNegociacoes.inverteOrdem();
+        } else {
+            this._listaNegociacoes.ordena((a, b) => a[coluna] - b[coluna]);
+        }
+        this._ordemAtual = coluna;
     }
     
     _criaNegociacao() {
